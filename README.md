@@ -97,7 +97,7 @@ curl -X POST http://localhost:8080/api/auth/login \
   -d '{"id":"test_user","password":"password123!"}'
 ```
 
-응답의 `accessToken`을 이후 요청에 사용합니다.
+응답은 공통 래퍼 형태이며, `data.accessToken`을 이후 요청에 사용합니다.
 
 ```bash
 curl http://localhost:8080/api/members/me \

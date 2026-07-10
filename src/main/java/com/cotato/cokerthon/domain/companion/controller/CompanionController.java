@@ -83,7 +83,7 @@ public class CompanionController {
 	@Operation(
 		summary = "동행자 목록 조회",
 		description = "내가 추가한 동행자들의 닉네임, 현재 수면 도시, 서울과의 수면시차, 마지막 기록 시각을 조회합니다. "
-			+ "아직 수면시차를 계산한 적 없는 동행자는 city/jetlag 관련 필드가 null로 내려갑니다."
+			+ "아직 수면시차를 계산한 적 없는 동행자는 서울, 0분, SAME으로 내려갑니다."
 	)
 	@ApiResponses({
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
