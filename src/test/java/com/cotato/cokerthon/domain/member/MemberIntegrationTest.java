@@ -26,7 +26,7 @@ class MemberIntegrationTest {
 
 	@Test
 	void 수면시차_계산_전에는_서울이_기본_위치로_내려온다() throws Exception {
-		String accessToken = signupAndLogin("member_me_before", "password1!", "채은");
+		String accessToken = signupAndLogin("membermebefore", "password1!", "채은");
 
 		ResponseEntity<String> response = getMyInfo(accessToken);
 
@@ -43,7 +43,7 @@ class MemberIntegrationTest {
 
 	@Test
 	void 수면시차_계산_후에는_현재_위치의_위경도가_내려온다() throws Exception {
-		String accessToken = signupAndLogin("member_me_after", "password1!", "채은");
+		String accessToken = signupAndLogin("membermeafter", "password1!", "채은");
 
 		// 기획안 예시 (03:00~10:00 / 23:00~07:00) → WEST(gap=210: 뉴델리/콜롬보 tie)
 		String jetlagBody = """

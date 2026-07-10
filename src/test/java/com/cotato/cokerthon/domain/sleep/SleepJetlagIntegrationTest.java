@@ -27,7 +27,7 @@ class SleepJetlagIntegrationTest {
 
 	@Test
 	void 목표보다_늦게_자는_경우_서쪽_방향_도시로_매칭된다() throws Exception {
-		String accessToken = signupAndLogin("jetlag_west", "password1!", "웨스트");
+		String accessToken = signupAndLogin("jetlagwest", "password1!", "웨스트");
 
 		// 기획안 예시: 현재 03:00~10:00, 목표 23:00~07:00 → 시차 3시간30분, WEST(gap=210: 뉴델리/콜롬보 tie)
 		String requestBody = """
@@ -58,7 +58,7 @@ class SleepJetlagIntegrationTest {
 
 	@Test
 	void 같은_시차_구간에_여러_도시가_있으면_랜덤으로_매칭된다() throws Exception {
-		String accessToken = signupAndLogin("jetlag_tie", "password1!", "타이");
+		String accessToken = signupAndLogin("jetlagtie", "password1!", "타이");
 
 		// 현재 01:00~09:00(중간 05:00) vs 목표 00:00~08:00(중간 04:00) → 시차 1시간, WEST
 		// 베이징/싱가포르/타이베이가 같은 시차 구간(gap=60)에 매핑되어 있어 반복 호출 시 셋 다 나와야 한다
@@ -87,7 +87,7 @@ class SleepJetlagIntegrationTest {
 
 	@Test
 	void 목표보다_일찍_자는_경우_동쪽_방향_도시로_매칭된다() throws Exception {
-		String accessToken = signupAndLogin("jetlag_east", "password1!", "이스트");
+		String accessToken = signupAndLogin("jetlageast", "password1!", "이스트");
 
 		// 현재 22:00~06:00(중간 02:00) vs 목표 24:00~08:00(중간 04:00) → 시차 2시간, EAST
 		String requestBody = """
@@ -110,7 +110,7 @@ class SleepJetlagIntegrationTest {
 
 	@Test
 	void 시차가_거의_없으면_서울로_매칭된다() throws Exception {
-		String accessToken = signupAndLogin("jetlag_same", "password1!", "세임");
+		String accessToken = signupAndLogin("jetlagsame", "password1!", "세임");
 
 		String requestBody = """
 			{
