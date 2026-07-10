@@ -179,18 +179,7 @@ public class ReturnRouteService {
 			return getSeoulCity();
 		}
 
-		candidates = cityRepository.findByDirectionAndGapMinutes(direction, gapMinutes);
-		if (candidates.isEmpty()) {
-			candidates = new ArrayList<>();
-			candidates.addAll(
-				cityRepository.findByDirectionAndMappingMinMinutesLessThanEqualAndMappingMaxMinutesGreaterThanEqual(
-					direction, gapMinutes, gapMinutes)
-			);
-			candidates.addAll(
-				cityRepository.findByDirectionAndMappingMinMinutesLessThanEqualAndMappingMaxMinutesIsNull(
-					direction, gapMinutes)
-			);
-		}
+		candidates = cityRepository.findAllByDirectionAndGapMinutes(direction, gapMinutes);
 		if (candidates.isEmpty()) {
 			throw new BusinessException(ErrorCode.NOT_FOUND);
 		}

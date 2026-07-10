@@ -5,20 +5,20 @@ import com.cotato.cokerthon.domain.city.entity.CityDirection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface CityRepository extends JpaRepository<City, Integer> {
 
-	List<City> findByDirectionAndGapMinutes(CityDirection direction, int gapMinutes);
-
-	List<City> findByDirectionAndMappingMinMinutesLessThanEqualAndMappingMaxMinutesGreaterThanEqual(
-		CityDirection direction,
-		int minMinutes,
-		int maxMinutes
-	);
-
-	List<City> findByDirectionAndMappingMinMinutesLessThanEqualAndMappingMaxMinutesIsNull(
-		CityDirection direction,
-		int minMinutes
+	@Query("""
+		select c from City c
+		where c.direction = :direction
+			and c.mappingMinMinutes <= :gapMinutes
+			and (c.mappingMaxMinutes is null or c.mappingMaxMinutes > :gapMinutes)
+		""")
+	List<City> findAllByDirectionAndGapMinutes(
+		@Param("direction") CityDirection direction,
+		@Param("gapMinutes") int gapMinutes
 	);
 
 	Optional<City> findFirstByDirectionOrderByDisplayOrderAsc(CityDirection direction);
