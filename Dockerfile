@@ -1,22 +1,23 @@
 FROM eclipse-temurin:17-jdk AS builder
 
-WORKDIR /workspace
+WORKDIR /app
 
-COPY gradlew settings.gradle build.gradle ./
-COPY gradle ./gradle
-RUN chmod +x ./gradlew && ./gradlew dependencies --no-daemon
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY settings.gradle .
+RUN chmod +x gradlew
 
-COPY src ./src
-RUN ./gradlew bootJar -x test --no-daemon
+COPY src src
+
+RUN ./gradlew clean bootJar --no-daemon
 
 FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
-ENV SPRING_PROFILES_ACTIVE=prod
-
-COPY --from=builder /workspace/build/libs/*.jar app.jar
+COPY --from=builder /app/build/libs/*.jar app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

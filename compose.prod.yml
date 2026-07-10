@@ -1,0 +1,46 @@
+services:
+  app:
+    image: ghcr.io/8th-cokerthon/server-team5:latest
+    container_name: team5-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8080
+      DB_URL: jdbc:mysql://mysql:3306/${DB_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - team5-network
+
+  mysql:
+    image: mysql:8.4
+    container_name: team5-mysql
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - team5-network
+
+volumes:
+  mysql-data:
+
+networks:
+  team5-network:
