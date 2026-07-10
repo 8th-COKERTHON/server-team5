@@ -24,4 +24,6 @@ public interface CityRepository extends JpaRepository<City, Integer> {
 		@Param("direction") CityDirection direction,
 		@Param("gapMinutes") int gapMinutes
 	);
+
+	Optional<City> findFirstByDirectionOrderByDisplayOrderAsc(CityDirection direction);
 }

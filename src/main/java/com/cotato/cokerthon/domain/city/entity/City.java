@@ -30,6 +30,10 @@ public class City {
 	@Column(nullable = false, length = 50)
 	private String cityNameEn;
 
+	// IATA 공항 코드 (예: DEL)
+	@Column(nullable = false, unique = true, length = 3)
+	private String airportCode;
+
 	// UTC 오프셋 (예: +05:30)
 	@Column(nullable = false, length = 10)
 	private String utcOffset;
@@ -58,6 +62,10 @@ public class City {
 	@Column(name = "is_long_haul", nullable = false)
 	private boolean longHaul;
 
+	// 국기 이미지 URL
+	@Column(length = 500)
+	private String flagImageUrl;
+
 	// 정렬/귀국 경유 순서 기준 (서울과 가까운 순)
 	@Column(nullable = false)
 	private int displayOrder;
@@ -73,13 +81,14 @@ public class City {
 	protected City() {
 	}
 
-	private City(String countryName, String cityNameKr, String cityNameEn,
+	private City(String countryName, String cityNameKr, String cityNameEn, String airportCode,
 		String utcOffset, String ianaTimezoneId, CityDirection direction, int gapMinutes,
 		int mappingMinMinutes, Integer mappingMaxMinutes, boolean longHaul,
 		int displayOrder, double latitude, double longitude) {
 		this.countryName = countryName;
 		this.cityNameKr = cityNameKr;
 		this.cityNameEn = cityNameEn;
+		this.airportCode = airportCode;
 		this.utcOffset = utcOffset;
 		this.ianaTimezoneId = ianaTimezoneId;
 		this.direction = direction;
@@ -92,11 +101,11 @@ public class City {
 		this.longitude = longitude;
 	}
 
-	public static City create(String countryName, String cityNameKr, String cityNameEn,
+	public static City create(String countryName, String cityNameKr, String cityNameEn, String airportCode,
 		String utcOffset, String ianaTimezoneId, CityDirection direction, int gapMinutes,
 		int mappingMinMinutes, Integer mappingMaxMinutes, boolean longHaul,
 		int displayOrder, double latitude, double longitude) {
-		return new City(countryName, cityNameKr, cityNameEn, utcOffset, ianaTimezoneId,
+		return new City(countryName, cityNameKr, cityNameEn, airportCode, utcOffset, ianaTimezoneId,
 			direction, gapMinutes, mappingMinMinutes, mappingMaxMinutes, longHaul,
 			displayOrder, latitude, longitude);
 	}
@@ -115,6 +124,10 @@ public class City {
 
 	public String getCityNameEn() {
 		return cityNameEn;
+	}
+
+	public String getAirportCode() {
+		return airportCode;
 	}
 
 	public String getUtcOffset() {
@@ -143,6 +156,10 @@ public class City {
 
 	public boolean isLongHaul() {
 		return longHaul;
+	}
+
+	public String getFlagImageUrl() {
+		return flagImageUrl;
 	}
 
 	public int getDisplayOrder() {

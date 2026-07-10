@@ -5,6 +5,8 @@ import com.cotato.cokerthon.domain.sleep.entity.SleepJetlagResult;
 import com.cotato.cokerthon.global.entity.BaseCreatedAtEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -33,6 +35,14 @@ public class ReturnRoute extends BaseCreatedAtEntity {
 	@Column(nullable = false)
 	private int durationDays;
 
+	// 현재 진행 일차. 1이면 1일차 목적지로 이동 전, durationDays + 1이면 완료 가능 상태
+	@Column(nullable = false)
+	private int currentDayNumber;
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 20)
+	private ReturnRouteStatus status;
+
 	protected ReturnRoute() {
 	}
 
@@ -41,6 +51,8 @@ public class ReturnRoute extends BaseCreatedAtEntity {
 		this.result = result;
 		this.dailyAdjustMinutes = dailyAdjustMinutes;
 		this.durationDays = durationDays;
+		this.currentDayNumber = 1;
+		this.status = ReturnRouteStatus.IN_PROGRESS;
 	}
 
 	public static ReturnRoute create(Member member, SleepJetlagResult result, int dailyAdjustMinutes,
@@ -62,5 +74,28 @@ public class ReturnRoute extends BaseCreatedAtEntity {
 
 	public int getDurationDays() {
 		return durationDays;
+	}
+
+	public int getCurrentDayNumber() {
+		return currentDayNumber;
+	}
+
+	public ReturnRouteStatus getStatus() {
+		return status;
+	}
+
+	public void cancel() {
+		this.status = ReturnRouteStatus.CANCELLED;
+	}
+
+	public void arriveNextStop() {
+		if (status != ReturnRouteStatus.IN_PROGRESS) {
+			return;
+		}
+
+		this.currentDayNumber++;
+		if (currentDayNumber > durationDays) {
+			this.status = ReturnRouteStatus.COMPLETED;
+		}
 	}
 }
