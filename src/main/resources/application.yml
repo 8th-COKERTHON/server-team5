@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: 8th-cokerthon
+
+  profiles:
+    active: local
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:8th-cokerthon-default-jwt-secret-key-for-local-dev}
+    access-token-expiration-millis: ${JWT_ACCESS_TOKEN_EXPIRATION_MILLIS:86400000}
