@@ -19,7 +19,7 @@ management:
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
-  extra-allowed-origins: ${CORS_EXTRA_ALLOWED_ORIGINS:}
+  extra-allowed-origins: ${CORS_EXTRA_ALLOWED_ORIGINS:https://13.125.171.232.nip.io,http://13.125.171.232.nip.io}
 
 app:
   jwt:
