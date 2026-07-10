@@ -100,14 +100,18 @@ jobs:
             docker compose -f compose.prod.yml pull app
             docker compose -f compose.prod.yml up -d
 
+            healthy=false
             for attempt in $(seq 1 30); do
               if curl --fail --silent http://127.0.0.1:8080/actuator/health > /dev/null; then
                 echo "Application is healthy"
-                exit 0
+                healthy=true
+                break
               fi
               sleep 2
             done
 
-            docker compose -f compose.prod.yml logs app
-            exit 1
+            if [ "$healthy" != "true" ]; then
+              docker compose -f compose.prod.yml logs app
+              exit 1
+            fi
           EOF
