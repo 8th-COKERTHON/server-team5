@@ -129,10 +129,83 @@ class SleepJetlagIntegrationTest {
 		assertThat(data.path("to").path("cityNameKr").asText()).isEqualTo("서울");
 	}
 
+	@Test
+	void 비회원은_기기당_1회만_계산할_수_있다() throws Exception {
+		String deviceId = "guest-device-" + java.util.UUID.randomUUID();
+		String requestBody = """
+			{
+				"currentBedtime": "03:00",
+				"currentWaketime": "10:00",
+				"targetBedtime": "23:00",
+				"targetWaketime": "07:00"
+			}
+			""";
+
+		ResponseEntity<String> first = postJetlagAsGuest(deviceId, requestBody);
+		assertThat(first.getStatusCode()).isEqualTo(HttpStatus.OK);
+		JsonNode firstData = objectMapper.readTree(first.getBody()).path("data");
+		assertThat(firstData.path("resultId").isNull()).isTrue();
+		assertThat(firstData.path("jetlagMinutes").asInt()).isEqualTo(210);
+
+		ResponseEntity<String> second = postJetlagAsGuest(deviceId, requestBody);
+		assertThat(second.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+	}
+
+	@Test
+	void 비회원이_기기_식별자_없이_호출하면_400이_난다() throws Exception {
+		String requestBody = """
+			{
+				"currentBedtime": "03:00",
+				"currentWaketime": "10:00",
+				"targetBedtime": "23:00",
+				"targetWaketime": "07:00"
+			}
+			""";
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		ResponseEntity<String> response = restTemplate.postForEntity(
+			"/api/sleep/jetlag", new HttpEntity<>(requestBody, headers), String.class);
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+	}
+
+	@Test
+	void 회원은_같은_기기여도_횟수_제한_없이_계산할_수_있다() throws Exception {
+		String accessToken = signupAndLogin("jetlagunlimited", "password1!", "무제한");
+		String requestBody = """
+			{
+				"currentBedtime": "03:00",
+				"currentWaketime": "10:00",
+				"targetBedtime": "23:00",
+				"targetWaketime": "07:00"
+			}
+			""";
+
+		ResponseEntity<String> first = postJetlag(accessToken, requestBody);
+		ResponseEntity<String> second = postJetlag(accessToken, requestBody);
+
+		assertThat(first.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(second.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(objectMapper.readTree(first.getBody()).path("data").path("resultId").isNull()).isFalse();
+	}
+
 	private ResponseEntity<String> postJetlag(String accessToken, String requestBody) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		headers.setBearerAuth(accessToken);
+
+		return restTemplate.postForEntity(
+			"/api/sleep/jetlag",
+			new HttpEntity<>(requestBody, headers),
+			String.class
+		);
+	}
+
+	private ResponseEntity<String> postJetlagAsGuest(String deviceId, String requestBody) {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.set("X-Device-Id", deviceId);
 
 		return restTemplate.postForEntity(
 			"/api/sleep/jetlag",

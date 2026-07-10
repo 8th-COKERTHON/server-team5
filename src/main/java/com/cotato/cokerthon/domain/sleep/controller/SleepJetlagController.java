@@ -6,12 +6,14 @@ import com.cotato.cokerthon.domain.sleep.service.SleepJetlagService;
 import com.cotato.cokerthon.global.response.ApiResponse;
 import com.cotato.cokerthon.global.security.LoginMember;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,16 +37,23 @@ public class SleepJetlagController {
 			- 수면시차 = |현재 수면 중간시각 - 목표 수면 중간시각| (원형 거리 기준, 최대 12시간=720분)
 			- 현재 수면이 목표보다 늦으면 WEST, 이르면 EAST, 30분 미만 차이면 SAME(서울)으로 매칭됩니다.
 			- 같은 시차 구간에 여러 도시가 매핑되어 있으면 그중 하나가 랜덤으로 선택됩니다.
-			- 호출할 때마다 새 계산 결과가 생성되어 이력으로 남으며(재측정), 이전 결과는 덮어써지지 않습니다.
-			- 로그인한 회원만 호출할 수 있고, 결과는 호출한 회원 소유로 저장됩니다.
+
+			**로그인 회원**: Authorization 헤더로 호출하면 매번 새 계산 결과가 이력으로 저장되며 횟수 제한이 없습니다.
+
+			**비회원(게스트)**: Authorization 헤더 없이 `X-Device-Id` 헤더(클라이언트가 생성해 보관하는 기기 식별자)만
+			담아 호출하면 딱 1회 계산할 수 있습니다. 계산 결과는 서버에 저장되지 않고(`resultId`=null), 같은
+			`X-Device-Id`로 다시 호출하면 403(GUEST_TRIAL_EXHAUSTED)이 나며 이때부터는 회원가입 후 로그인해야
+			다시 이용할 수 있습니다.
 			"""
 	)
 	@ApiResponses({
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계산 성공"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(
-			responseCode = "400", description = "요청 값 검증 실패 (취침/기상 시간 누락 COMMON_400, 시간 형식 오류 SLEEP_400_001)"),
+			responseCode = "400",
+			description = "요청 값 검증 실패 (취침/기상 시간 누락 COMMON_400, 시간 형식 오류 SLEEP_400_001), "
+				+ "또는 비회원인데 X-Device-Id 헤더 누락 (SLEEP_400_002)"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(
-			responseCode = "401", description = "인증이 필요합니다 (토큰 누락/만료/위조, AUTH_401)"),
+			responseCode = "403", description = "비회원 체험을 이미 사용함, 회원가입 필요 (SLEEP_403_001)"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(
 			responseCode = "404", description = "존재하지 않는 회원입니다 (COMMON_404)"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -53,8 +62,11 @@ public class SleepJetlagController {
 	@PostMapping
 	public ApiResponse<SleepJetlagResultResponse> calculate(
 		@AuthenticationPrincipal LoginMember loginMember,
+		@Parameter(description = "비회원 호출 시에만 필요한 기기 식별자 (클라이언트 생성 UUID 등)")
+		@RequestHeader(value = "X-Device-Id", required = false) String deviceId,
 		@Valid @RequestBody SleepJetlagRequest request
 	) {
-		return ApiResponse.ok(sleepJetlagService.calculate(loginMember.id(), request));
+		Long memberId = loginMember != null ? loginMember.id() : null;
+		return ApiResponse.ok(sleepJetlagService.calculate(memberId, deviceId, request));
 	}
 }

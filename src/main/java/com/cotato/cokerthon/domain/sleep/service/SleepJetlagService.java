@@ -7,9 +7,11 @@ import com.cotato.cokerthon.domain.member.entity.Member;
 import com.cotato.cokerthon.domain.member.repository.MemberRepository;
 import com.cotato.cokerthon.domain.sleep.dto.request.SleepJetlagRequest;
 import com.cotato.cokerthon.domain.sleep.dto.response.SleepJetlagResultResponse;
+import com.cotato.cokerthon.domain.sleep.entity.GuestUsage;
 import com.cotato.cokerthon.domain.sleep.entity.JetlagDirection;
 import com.cotato.cokerthon.domain.sleep.entity.SleepJetlagResult;
 import com.cotato.cokerthon.domain.sleep.entity.SleepRecord;
+import com.cotato.cokerthon.domain.sleep.repository.GuestUsageRepository;
 import com.cotato.cokerthon.domain.sleep.repository.SleepJetlagResultRepository;
 import com.cotato.cokerthon.domain.sleep.repository.SleepRecordRepository;
 import com.cotato.cokerthon.global.exception.BusinessException;
@@ -32,21 +34,32 @@ public class SleepJetlagService {
 	private final CityRepository cityRepository;
 	private final SleepRecordRepository sleepRecordRepository;
 	private final SleepJetlagResultRepository sleepJetlagResultRepository;
+	private final GuestUsageRepository guestUsageRepository;
 
 	public SleepJetlagService(
 		MemberRepository memberRepository,
 		CityRepository cityRepository,
 		SleepRecordRepository sleepRecordRepository,
-		SleepJetlagResultRepository sleepJetlagResultRepository
+		SleepJetlagResultRepository sleepJetlagResultRepository,
+		GuestUsageRepository guestUsageRepository
 	) {
 		this.memberRepository = memberRepository;
 		this.cityRepository = cityRepository;
 		this.sleepRecordRepository = sleepRecordRepository;
 		this.sleepJetlagResultRepository = sleepJetlagResultRepository;
+		this.guestUsageRepository = guestUsageRepository;
 	}
 
+	// memberId가 있으면 회원(무제한, 이력 저장) 흐름, 없으면 비회원(1회, 미저장) 흐름
 	@Transactional
-	public SleepJetlagResultResponse calculate(Long memberId, SleepJetlagRequest request) {
+	public SleepJetlagResultResponse calculate(Long memberId, String deviceId, SleepJetlagRequest request) {
+		if (memberId != null) {
+			return calculateForMember(memberId, request);
+		}
+		return calculateForGuest(deviceId, request);
+	}
+
+	private SleepJetlagResultResponse calculateForMember(Long memberId, SleepJetlagRequest request) {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
 
@@ -67,10 +80,32 @@ public class SleepJetlagService {
 			jetlag.minutes(), jetlag.direction(), matchedCity, LocalDate.now()
 		));
 
-		City seoul = cityRepository.findByDirection(CityDirection.BASE)
-			.orElseThrow(() -> new BusinessException(ErrorCode.CITY_NOT_MATCHED));
+		return SleepJetlagResultResponse.from(result, getSeoul());
+	}
 
-		return SleepJetlagResultResponse.from(result, seoul);
+	// 비회원은 서버에 SleepRecord/SleepJetlagResult를 저장하지 않고 계산만 해서 반환한다 (게스트는 서버 미저장)
+	private SleepJetlagResultResponse calculateForGuest(String deviceId, SleepJetlagRequest request) {
+		if (deviceId == null || deviceId.isBlank()) {
+			throw new BusinessException(ErrorCode.GUEST_DEVICE_ID_REQUIRED);
+		}
+		if (guestUsageRepository.existsByDeviceId(deviceId)) {
+			throw new BusinessException(ErrorCode.GUEST_TRIAL_EXHAUSTED);
+		}
+
+		MidSleep currentSleep = midSleepOf(request.currentBedtime(), request.currentWaketime());
+		MidSleep targetSleep = midSleepOf(request.targetBedtime(), request.targetWaketime());
+
+		Jetlag jetlag = calculateJetlag(currentSleep.midTime(), targetSleep.midTime());
+		City matchedCity = findMatchedCity(jetlag.direction(), jetlag.minutes());
+		City seoul = getSeoul();
+
+		guestUsageRepository.save(GuestUsage.create(deviceId));
+
+		return SleepJetlagResultResponse.guest(
+			request.currentBedtime(), request.currentWaketime(), currentSleep.sleepMinutes(),
+			request.targetBedtime(), request.targetWaketime(), targetSleep.sleepMinutes(),
+			jetlag.minutes(), jetlag.direction(), matchedCity, seoul
+		);
 	}
 
 	// 취침~기상 구간의 중간 시각과 총 수면시간을 계산 (자정을 넘기는 구간도 처리)
@@ -113,6 +148,11 @@ public class SleepJetlagService {
 		}
 
 		return matchedCities.get(ThreadLocalRandom.current().nextInt(matchedCities.size()));
+	}
+
+	private City getSeoul() {
+		return cityRepository.findByDirection(CityDirection.BASE)
+			.orElseThrow(() -> new BusinessException(ErrorCode.CITY_NOT_MATCHED));
 	}
 
 	private record MidSleep(LocalTime midTime, int sleepMinutes) {
