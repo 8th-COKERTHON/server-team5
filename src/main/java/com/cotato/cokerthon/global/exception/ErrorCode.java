@@ -18,7 +18,9 @@ public enum ErrorCode {
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON_500", "서버 오류가 발생했습니다."),
 	CITY_NOT_MATCHED(HttpStatus.INTERNAL_SERVER_ERROR, "SLEEP_500_001", "시차에 매칭되는 도시를 찾을 수 없습니다."),
 	SELF_COMPANION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "COMPANION_400_001", "자기 자신은 동행자로 추가할 수 없습니다."),
-	ALREADY_COMPANION(HttpStatus.CONFLICT, "COMPANION_409_001", "이미 추가한 동행자입니다.");
+	ALREADY_COMPANION(HttpStatus.CONFLICT, "COMPANION_409_001", "이미 추가한 동행자입니다."),
+	GUEST_DEVICE_ID_REQUIRED(HttpStatus.BAD_REQUEST, "SLEEP_400_002", "비회원 이용을 위해서는 X-Device-Id 헤더가 필요합니다."),
+	GUEST_TRIAL_EXHAUSTED(HttpStatus.FORBIDDEN, "SLEEP_403_001", "비회원 체험은 1회만 가능합니다. 회원가입 후 다시 이용해주세요.");
 
 	private final HttpStatus status;
 	private final String code;

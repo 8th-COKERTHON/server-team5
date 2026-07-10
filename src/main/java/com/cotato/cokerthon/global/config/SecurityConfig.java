@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -59,6 +60,8 @@ public class SecurityConfig {
 			.exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
 			.authorizeHttpRequests(authorize -> authorize
 				.requestMatchers(PUBLIC_PATHS).permitAll()
+				// 비회원도 1회 체험 계산이 가능해야 해서 인증을 강제하지 않고, 회원/비회원 분기는 서비스 로직에서 처리
+				.requestMatchers(HttpMethod.POST, "/api/sleep/jetlag").permitAll()
 				.anyRequest().authenticated())
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 			.build();

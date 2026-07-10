@@ -6,10 +6,11 @@ import com.cotato.cokerthon.domain.sleep.entity.SleepJetlagResult;
 import com.cotato.cokerthon.domain.sleep.entity.SleepRecord;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Schema(description = "수면시차 계산 결과 (국제선 보딩패스 형태 - '오늘의 항공권')")
 public record SleepJetlagResultResponse(
-	@Schema(description = "계산 결과 고유 ID", example = "1")
+	@Schema(description = "계산 결과 고유 ID. 비회원 체험 계산은 저장되지 않아 null", example = "1", nullable = true)
 	Long resultId,
 
 	@Schema(description = "출발지 (항상 대한민국 서울)")
@@ -63,6 +64,25 @@ public record SleepJetlagResultResponse(
 			formatJetlagLabel(result.getJetlagMinutes()),
 			result.getDirection(),
 			result.getResultDate()
+		);
+	}
+
+	// 비회원 체험 계산 응답 생성 (SleepRecord/SleepJetlagResult를 저장하지 않으므로 엔티티 없이 조립)
+	public static SleepJetlagResultResponse guest(
+		LocalTime currentBedtime, LocalTime currentWaketime, int currentSleepMinutes,
+		LocalTime targetBedtime, LocalTime targetWaketime, int targetSleepMinutes,
+		int jetlagMinutes, JetlagDirection direction, City matchedCity, City fromCity
+	) {
+		return new SleepJetlagResultResponse(
+			null,
+			CitySummaryResponse.from(fromCity),
+			CitySummaryResponse.from(matchedCity),
+			new SleepPeriodResponse(currentBedtime, currentWaketime, currentSleepMinutes),
+			new SleepPeriodResponse(targetBedtime, targetWaketime, targetSleepMinutes),
+			jetlagMinutes,
+			formatJetlagLabel(jetlagMinutes),
+			direction,
+			LocalDate.now()
 		);
 	}
 
