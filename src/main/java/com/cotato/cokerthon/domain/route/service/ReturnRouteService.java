@@ -37,6 +37,7 @@ public class ReturnRouteService {
 
 	private static final Logger log = LoggerFactory.getLogger(ReturnRouteService.class);
 	private static final int DAILY_ADJUST_MINUTES = 30;
+	private static final int SEOUL_FALLBACK_GAP_MINUTES = 15;
 
 	private final ReturnRouteRepository returnRouteRepository;
 	private final ReturnRouteDayRepository returnRouteDayRepository;
@@ -178,7 +179,7 @@ public class ReturnRouteService {
 		int gapMinutes = Math.abs(signedGapMinutes);
 		List<City> candidates;
 
-		if (direction == CityDirection.BASE || gapMinutes == 0) {
+		if (direction == CityDirection.BASE || gapMinutes <= SEOUL_FALLBACK_GAP_MINUTES) {
 			return getSeoulCity();
 		}
 
