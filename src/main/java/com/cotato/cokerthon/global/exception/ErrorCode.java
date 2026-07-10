@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 
 public enum ErrorCode {
 	INVALID_INPUT(HttpStatus.BAD_REQUEST, "COMMON_400", "잘못된 요청입니다."),
+	INVALID_SLEEP_TIME_FORMAT(HttpStatus.BAD_REQUEST, "SLEEP_400_001", "수면 시간은 HH:mm 형식으로 입력해야 합니다."),
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTH_401", "인증이 필요합니다."),
 	INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "AUTH_401_001", "아이디 또는 비밀번호가 올바르지 않습니다."),
 	DUPLICATED_LOGIN_ID(HttpStatus.CONFLICT, "MEMBER_409_001", "이미 사용 중인 아이디입니다."),

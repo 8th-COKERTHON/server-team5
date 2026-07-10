@@ -2,6 +2,7 @@ package com.cotato.cokerthon.global.exception;
 
 import com.cotato.cokerthon.global.response.ErrorResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -29,6 +30,18 @@ public class GlobalExceptionHandler {
 		return ResponseEntity
 			.status(ErrorCode.INVALID_INPUT.getStatus())
 			.body(ErrorResponse.of(ErrorCode.INVALID_INPUT.getCode(), message));
+	}
+
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(
+		HttpMessageNotReadableException exception
+	) {
+		return ResponseEntity
+			.status(ErrorCode.INVALID_SLEEP_TIME_FORMAT.getStatus())
+			.body(ErrorResponse.of(
+				ErrorCode.INVALID_SLEEP_TIME_FORMAT.getCode(),
+				ErrorCode.INVALID_SLEEP_TIME_FORMAT.getMessage()
+			));
 	}
 
 	@ExceptionHandler(Exception.class)

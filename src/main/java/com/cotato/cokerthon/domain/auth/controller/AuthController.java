@@ -52,7 +52,7 @@ public class AuthController {
 		summary = "로그인",
 		description = """
 			아이디와 비밀번호로 로그인하고 Access Token을 발급받습니다.
-			발급된 토큰은 이후 요청의 Authorization 헤더에 'Bearer {accessToken}' 형태로 담아 보내야 인증이 필요한 API를 호출할 수 있습니다.
+			응답의 data.accessToken 값을 이후 요청의 Authorization 헤더에 'Bearer {accessToken}' 형태로 담아 보내야 인증이 필요한 API를 호출할 수 있습니다.
 			"""
 	)
 	@ApiResponses({

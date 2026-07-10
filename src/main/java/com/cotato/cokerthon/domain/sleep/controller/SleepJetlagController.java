@@ -42,7 +42,7 @@ public class SleepJetlagController {
 	@ApiResponses({
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계산 성공"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(
-			responseCode = "400", description = "요청 값 검증 실패 (취침/기상 시간 누락, COMMON_400)"),
+			responseCode = "400", description = "요청 값 검증 실패 (취침/기상 시간 누락 COMMON_400, 시간 형식 오류 SLEEP_400_001)"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(
 			responseCode = "401", description = "인증이 필요합니다 (토큰 누락/만료/위조, AUTH_401)"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(
