@@ -86,7 +86,7 @@ APP_SWAGGER_SERVER_URL=http://localhost:8080
 ```bash
 curl -X POST http://localhost:8080/api/auth/signup \
   -H "Content-Type: application/json" \
-  -d '{"id":"test_user","password":"password123!","nickname":"테스터"}'
+  -d '{"id":"testuser","password":"password123!","nickname":"테스터"}'
 ```
 
 ### 로그인
@@ -94,7 +94,7 @@ curl -X POST http://localhost:8080/api/auth/signup \
 ```bash
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"id":"test_user","password":"password123!"}'
+  -d '{"id":"testuser","password":"password123!"}'
 ```
 
 응답은 공통 래퍼 형태이며, `data.accessToken`을 이후 요청에 사용합니다.
@@ -131,7 +131,7 @@ curl -X POST http://localhost:8080/api/return-routes/results/{resultId} \
 curl -X POST http://localhost:8080/api/companions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer {accessToken}" \
-  -d '{"loginId":"friend_user"}'
+  -d '{"loginId":"frienduser"}'
 ```
 
 자세한 요청/응답 스키마는 Swagger에서 확인할 수 있습니다.

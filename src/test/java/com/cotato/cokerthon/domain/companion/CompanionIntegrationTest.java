@@ -26,25 +26,25 @@ class CompanionIntegrationTest {
 
 	@Test
 	void 아이디로_동행자를_검색한다() throws Exception {
-		signupAndLogin("comp_search_me", "password1!", "나");
-		signupAndLogin("comp_search_target", "password1!", "민주");
-		String accessToken = login("comp_search_me", "password1!");
+		signupAndLogin("compsearchme", "password1!", "나");
+		signupAndLogin("compsearchtarget", "password1!", "민주");
+		String accessToken = login("compsearchme", "password1!");
 
-		ResponseEntity<String> response = search(accessToken, "comp_search_target");
+		ResponseEntity<String> response = search(accessToken, "compsearchtarget");
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		JsonNode data = objectMapper.readTree(response.getBody()).path("data");
-		assertThat(data.path("loginId").asText()).isEqualTo("comp_search_target");
+		assertThat(data.path("loginId").asText()).isEqualTo("compsearchtarget");
 		assertThat(data.path("nickname").asText()).isEqualTo("민주");
 		assertThat(data.path("alreadyCompanion").asBoolean()).isFalse();
 	}
 
 	@Test
 	void 동행자를_추가하면_즉시_목록에_나타난다() throws Exception {
-		String accessToken = signupAndLogin("comp_add_me", "password1!", "나");
-		signupAndLogin("comp_add_target", "password1!", "민지");
+		String accessToken = signupAndLogin("compaddme", "password1!", "나");
+		signupAndLogin("compaddtarget", "password1!", "민지");
 
-		ResponseEntity<String> addResponse = add(accessToken, "comp_add_target");
+		ResponseEntity<String> addResponse = add(accessToken, "compaddtarget");
 		assertThat(addResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 		JsonNode addedData = objectMapper.readTree(addResponse.getBody()).path("data");
 		assertThat(addedData.path("nickname").asText()).isEqualTo("민지");
@@ -63,8 +63,8 @@ class CompanionIntegrationTest {
 
 	@Test
 	void 동행자의_수면시차_계산_기록이_있으면_카드에_함께_내려온다() throws Exception {
-		String myToken = signupAndLogin("comp_city_me", "password1!", "나");
-		String friendToken = signupAndLogin("comp_city_friend", "password1!", "민지");
+		String myToken = signupAndLogin("compcityme", "password1!", "나");
+		String friendToken = signupAndLogin("compcityfriend", "password1!", "민지");
 
 		// 기획안 예시와 동일한 입력 (03:00~10:00 / 23:00~07:00) → 3시간30분, WEST(gap=210: 뉴델리/콜롬보 tie)
 		String jetlagBody = """
@@ -80,7 +80,7 @@ class CompanionIntegrationTest {
 		jetlagHeaders.setBearerAuth(friendToken);
 		restTemplate.postForEntity("/api/sleep/jetlag", new HttpEntity<>(jetlagBody, jetlagHeaders), String.class);
 
-		add(myToken, "comp_city_friend");
+		add(myToken, "compcityfriend");
 
 		ResponseEntity<String> listResponse = getCompanions(myToken);
 		JsonNode companion = objectMapper.readTree(listResponse.getBody()).path("data").get(0);
@@ -95,30 +95,30 @@ class CompanionIntegrationTest {
 
 	@Test
 	void 자기_자신은_동행자로_추가할_수_없다() throws Exception {
-		String accessToken = signupAndLogin("comp_self", "password1!", "나");
+		String accessToken = signupAndLogin("compself", "password1!", "나");
 
-		ResponseEntity<String> response = add(accessToken, "comp_self");
+		ResponseEntity<String> response = add(accessToken, "compself");
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 	}
 
 	@Test
 	void 같은_동행자를_중복으로_추가할_수_없다() throws Exception {
-		String accessToken = signupAndLogin("comp_dup_me", "password1!", "나");
-		signupAndLogin("comp_dup_target", "password1!", "민지");
+		String accessToken = signupAndLogin("compdupme", "password1!", "나");
+		signupAndLogin("compduptarget", "password1!", "민지");
 
-		add(accessToken, "comp_dup_target");
-		ResponseEntity<String> secondAdd = add(accessToken, "comp_dup_target");
+		add(accessToken, "compduptarget");
+		ResponseEntity<String> secondAdd = add(accessToken, "compduptarget");
 
 		assertThat(secondAdd.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
 	}
 
 	@Test
 	void 동행자를_삭제하면_목록에서_사라진다() throws Exception {
-		String accessToken = signupAndLogin("comp_del_me", "password1!", "나");
-		signupAndLogin("comp_del_target", "password1!", "민지");
+		String accessToken = signupAndLogin("compdelme", "password1!", "나");
+		signupAndLogin("compdeltarget", "password1!", "민지");
 
-		ResponseEntity<String> addResponse = add(accessToken, "comp_del_target");
+		ResponseEntity<String> addResponse = add(accessToken, "compdeltarget");
 		Long companionMemberId = objectMapper.readTree(addResponse.getBody())
 			.path("data").path("companionMemberId").asLong();
 
