@@ -9,7 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-// 도시 매핑 마스터 데이터 (11개 기본 + 확장 4개 + 동쪽 4개). 시드 데이터라 변경 이력 불필요
+// 도시 매핑 마스터 데이터. 같은 시차 구간에 여러 도시가 매핑될 수 있어(랜덤 매칭) 시드 데이터라도 조합 수가 늘어날 수 있음
 @Entity
 @Table(name = "cities")
 public class City {
@@ -70,7 +70,44 @@ public class City {
 	@Column(nullable = false)
 	private int displayOrder;
 
+	// 위도 (프론트 지구본 매핑용)
+	@Column(nullable = false)
+	private double latitude;
+
+	// 경도 (프론트 지구본 매핑용)
+	@Column(nullable = false)
+	private double longitude;
+
 	protected City() {
+	}
+
+	private City(String countryName, String cityNameKr, String cityNameEn, String airportCode,
+		String utcOffset, String ianaTimezoneId, CityDirection direction, int gapMinutes,
+		int mappingMinMinutes, Integer mappingMaxMinutes, boolean longHaul,
+		int displayOrder, double latitude, double longitude) {
+		this.countryName = countryName;
+		this.cityNameKr = cityNameKr;
+		this.cityNameEn = cityNameEn;
+		this.airportCode = airportCode;
+		this.utcOffset = utcOffset;
+		this.ianaTimezoneId = ianaTimezoneId;
+		this.direction = direction;
+		this.gapMinutes = gapMinutes;
+		this.mappingMinMinutes = mappingMinMinutes;
+		this.mappingMaxMinutes = mappingMaxMinutes;
+		this.longHaul = longHaul;
+		this.displayOrder = displayOrder;
+		this.latitude = latitude;
+		this.longitude = longitude;
+	}
+
+	public static City create(String countryName, String cityNameKr, String cityNameEn, String airportCode,
+		String utcOffset, String ianaTimezoneId, CityDirection direction, int gapMinutes,
+		int mappingMinMinutes, Integer mappingMaxMinutes, boolean longHaul,
+		int displayOrder, double latitude, double longitude) {
+		return new City(countryName, cityNameKr, cityNameEn, airportCode, utcOffset, ianaTimezoneId,
+			direction, gapMinutes, mappingMinMinutes, mappingMaxMinutes, longHaul,
+			displayOrder, latitude, longitude);
 	}
 
 	public Integer getId() {
@@ -127,5 +164,13 @@ public class City {
 
 	public int getDisplayOrder() {
 		return displayOrder;
+	}
+
+	public double getLatitude() {
+		return latitude;
+	}
+
+	public double getLongitude() {
+		return longitude;
 	}
 }
