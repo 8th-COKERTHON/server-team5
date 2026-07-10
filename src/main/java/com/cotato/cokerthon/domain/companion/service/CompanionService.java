@@ -1,5 +1,8 @@
 package com.cotato.cokerthon.domain.companion.service;
 
+import com.cotato.cokerthon.domain.city.entity.City;
+import com.cotato.cokerthon.domain.city.entity.CityDirection;
+import com.cotato.cokerthon.domain.city.repository.CityRepository;
 import com.cotato.cokerthon.domain.companion.dto.request.CompanionCreateRequest;
 import com.cotato.cokerthon.domain.companion.dto.response.CompanionResponse;
 import com.cotato.cokerthon.domain.companion.dto.response.CompanionSearchResponse;
@@ -22,15 +25,18 @@ public class CompanionService {
 	private final CompanionRepository companionRepository;
 	private final MemberRepository memberRepository;
 	private final SleepJetlagResultRepository sleepJetlagResultRepository;
+	private final CityRepository cityRepository;
 
 	public CompanionService(
 		CompanionRepository companionRepository,
 		MemberRepository memberRepository,
-		SleepJetlagResultRepository sleepJetlagResultRepository
+		SleepJetlagResultRepository sleepJetlagResultRepository,
+		CityRepository cityRepository
 	) {
 		this.companionRepository = companionRepository;
 		this.memberRepository = memberRepository;
 		this.sleepJetlagResultRepository = sleepJetlagResultRepository;
+		this.cityRepository = cityRepository;
 	}
 
 	public CompanionSearchResponse search(Long memberId, String targetLoginId) {
@@ -54,14 +60,15 @@ public class CompanionService {
 		}
 
 		companionRepository.save(Companion.create(me, target));
-		return toCompanionResponse(target);
+		return toCompanionResponse(target, getSeoul());
 	}
 
 	public List<CompanionResponse> getCompanions(Long memberId) {
 		Member me = getMember(memberId);
+		City seoul = getSeoul();
 
 		return companionRepository.findAllByMember(me).stream()
-			.map(companion -> toCompanionResponse(companion.getCompanionMember()))
+			.map(companion -> toCompanionResponse(companion.getCompanionMember(), seoul))
 			.toList();
 	}
 
@@ -76,12 +83,12 @@ public class CompanionService {
 		companionRepository.delete(companion);
 	}
 
-	private CompanionResponse toCompanionResponse(Member companionMember) {
+	private CompanionResponse toCompanionResponse(Member companionMember, City seoul) {
 		SleepJetlagResult latestResult = sleepJetlagResultRepository
 			.findFirstByMemberOrderByCreatedAtDesc(companionMember)
 			.orElse(null);
 
-		return CompanionResponse.of(companionMember, latestResult);
+		return CompanionResponse.of(companionMember, latestResult, seoul);
 	}
 
 	private Member getMember(Long memberId) {
@@ -92,5 +99,10 @@ public class CompanionService {
 	private Member getMemberByLoginId(String loginId) {
 		return memberRepository.findByLoginId(loginId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+	}
+
+	private City getSeoul() {
+		return cityRepository.findByDirection(CityDirection.BASE)
+			.orElseThrow(() -> new BusinessException(ErrorCode.CITY_NOT_MATCHED));
 	}
 }

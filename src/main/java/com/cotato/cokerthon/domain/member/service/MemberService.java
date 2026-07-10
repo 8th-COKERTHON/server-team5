@@ -1,5 +1,8 @@
 package com.cotato.cokerthon.domain.member.service;
 
+import com.cotato.cokerthon.domain.city.entity.City;
+import com.cotato.cokerthon.domain.city.entity.CityDirection;
+import com.cotato.cokerthon.domain.city.repository.CityRepository;
 import com.cotato.cokerthon.domain.member.dto.response.MemberResponse;
 import com.cotato.cokerthon.domain.member.entity.Member;
 import com.cotato.cokerthon.domain.member.repository.MemberRepository;
@@ -16,11 +19,14 @@ public class MemberService {
 
 	private final MemberRepository memberRepository;
 	private final SleepJetlagResultRepository sleepJetlagResultRepository;
+	private final CityRepository cityRepository;
 
 	public MemberService(MemberRepository memberRepository,
-		SleepJetlagResultRepository sleepJetlagResultRepository) {
+		SleepJetlagResultRepository sleepJetlagResultRepository,
+		CityRepository cityRepository) {
 		this.memberRepository = memberRepository;
 		this.sleepJetlagResultRepository = sleepJetlagResultRepository;
+		this.cityRepository = cityRepository;
 	}
 
 	public MemberResponse getMyInfo(Long memberId) {
@@ -31,6 +37,11 @@ public class MemberService {
 			.findFirstByMemberOrderByCreatedAtDesc(member)
 			.orElse(null);
 
-		return MemberResponse.from(member, latestResult);
+		return MemberResponse.from(member, latestResult, getSeoul());
+	}
+
+	private City getSeoul() {
+		return cityRepository.findByDirection(CityDirection.BASE)
+			.orElseThrow(() -> new BusinessException(ErrorCode.CITY_NOT_MATCHED));
 	}
 }

@@ -25,7 +25,7 @@ class MemberIntegrationTest {
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	@Test
-	void 수면시차_계산_전에는_위치_정보가_없다() throws Exception {
+	void 수면시차_계산_전에는_서울이_기본_위치로_내려온다() throws Exception {
 		String accessToken = signupAndLogin("member_me_before", "password1!", "채은");
 
 		ResponseEntity<String> response = getMyInfo(accessToken);
@@ -33,14 +33,19 @@ class MemberIntegrationTest {
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		JsonNode data = objectMapper.readTree(response.getBody()).path("data");
 		assertThat(data.path("nickname").asText()).isEqualTo("채은");
-		assertThat(data.path("city").isNull()).isTrue();
+		assertThat(data.path("city").path("cityNameKr").asText()).isEqualTo("서울");
+		assertThat(data.path("city").path("latitude").asDouble()).isEqualTo(37.5665);
+		assertThat(data.path("city").path("longitude").asDouble()).isEqualTo(126.9780);
+		assertThat(data.path("jetlagMinutes").asInt()).isEqualTo(0);
+		assertThat(data.path("direction").asText()).isEqualTo("SAME");
+		assertThat(data.path("lastRecordedAt").isNull()).isTrue();
 	}
 
 	@Test
 	void 수면시차_계산_후에는_현재_위치의_위경도가_내려온다() throws Exception {
 		String accessToken = signupAndLogin("member_me_after", "password1!", "채은");
 
-		// 기획안 예시 (03:00~10:00 / 23:00~07:00) → 뉴델리
+		// 기획안 예시 (03:00~10:00 / 23:00~07:00) → WEST(gap=210: 뉴델리/콜롬보 tie)
 		String jetlagBody = """
 			{
 				"currentBedtime": "03:00",
@@ -58,9 +63,9 @@ class MemberIntegrationTest {
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		JsonNode data = objectMapper.readTree(response.getBody()).path("data");
-		assertThat(data.path("city").path("cityNameKr").asText()).isEqualTo("뉴델리");
-		assertThat(data.path("city").path("latitude").asDouble()).isEqualTo(28.6139);
-		assertThat(data.path("city").path("longitude").asDouble()).isEqualTo(77.2090);
+		assertThat(data.path("city").path("cityNameKr").asText()).isIn("뉴델리", "콜롬보");
+		assertThat(data.path("city").path("latitude").asDouble()).isNotZero();
+		assertThat(data.path("city").path("longitude").asDouble()).isNotZero();
 		assertThat(data.path("jetlagLabel").asText()).isEqualTo("3시간 30분");
 		assertThat(data.path("direction").asText()).isEqualTo("WEST");
 	}

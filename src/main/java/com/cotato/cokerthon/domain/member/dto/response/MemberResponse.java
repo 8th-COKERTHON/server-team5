@@ -1,5 +1,6 @@
 package com.cotato.cokerthon.domain.member.dto.response;
 
+import com.cotato.cokerthon.domain.city.entity.City;
 import com.cotato.cokerthon.domain.member.entity.Member;
 import com.cotato.cokerthon.domain.sleep.entity.JetlagDirection;
 import com.cotato.cokerthon.domain.sleep.entity.SleepJetlagResult;
@@ -17,29 +18,33 @@ public record MemberResponse(
 	@Schema(description = "닉네임", example = "채은")
 	String nickname,
 
-	@Schema(description = "현재 머무는 수면 도시. 수면시차를 한 번도 계산한 적 없으면 null", nullable = true)
+	@Schema(description = "현재 머무는 수면 도시. 아직 여행을 떠난 적 없으면 서울")
 	MemberCityResponse city,
 
-	@Schema(description = "수면시차(분). 기록이 없으면 null", example = "210", nullable = true)
-	Integer jetlagMinutes,
+	@Schema(description = "수면시차(분). 아직 여행을 떠난 적 없으면 0", example = "210")
+	int jetlagMinutes,
 
-	@Schema(description = "화면에 바로 표시할 수 있는 시차 라벨. 기록이 없으면 null", example = "3시간 30분", nullable = true)
+	@Schema(description = "화면에 바로 표시할 수 있는 시차 라벨. 아직 여행을 떠난 적 없으면 \"0분\"", example = "3시간 30분")
 	String jetlagLabel,
 
-	@Schema(description = "서울 대비 조정 방향. 기록이 없으면 null", example = "WEST", nullable = true)
+	@Schema(description = "서울 대비 조정 방향. 아직 여행을 떠난 적 없으면 SAME", example = "WEST")
 	JetlagDirection direction,
 
-	@Schema(description = "마지막 기록 시각. 기록이 없으면 null", nullable = true)
+	@Schema(description = "마지막 기록 시각. 실제로 계산한 기록이 없으면 null", nullable = true)
 	LocalDateTime lastRecordedAt
 ) {
 
-	public static MemberResponse from(Member member, SleepJetlagResult latestResult) {
+	public static MemberResponse from(Member member, SleepJetlagResult latestResult, City seoul) {
 		if (latestResult == null) {
 			return new MemberResponse(
 				member.getId(),
 				member.getLoginId(),
 				member.getNickname(),
-				null, null, null, null, null
+				MemberCityResponse.from(seoul),
+				0,
+				"0분",
+				JetlagDirection.SAME,
+				null
 			);
 		}
 
