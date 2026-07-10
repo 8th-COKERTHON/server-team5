@@ -26,6 +26,8 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class ReturnRouteService {
 
+	private static final Logger log = LoggerFactory.getLogger(ReturnRouteService.class);
 	private static final int DAILY_ADJUST_MINUTES = 30;
 
 	private final ReturnRouteRepository returnRouteRepository;
@@ -63,7 +66,7 @@ public class ReturnRouteService {
 	public ReturnRouteResponse createReturnRoute(Long memberId, Long resultId) {
 		Member member = getMember(memberId);
 		SleepJetlagResult result = sleepJetlagResultRepository.findById(resultId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+			.orElseThrow(() -> new BusinessException(ErrorCode.SLEEP_RESULT_NOT_FOUND));
 		validateOwner(member, result);
 
 		returnRouteRepository.findAllByMemberAndStatus(member, ReturnRouteStatus.IN_PROGRESS)
@@ -103,7 +106,7 @@ public class ReturnRouteService {
 	public ReturnRouteResponse getCurrentRoute(Long memberId) {
 		ReturnRoute route = getCurrentRouteEntity(memberId);
 		List<ReturnRouteDay> days = returnRouteDayRepository.findAllByReturnRouteOrderByDayNumberAsc(route);
-		ReturnRouteDay currentDay = getCurrentDayOrNull(route);
+		ReturnRouteDay currentDay = getCurrentDay(route);
 
 		return ReturnRouteResponse.of(route, getDepartureCity(route), currentDay, days);
 	}
@@ -181,7 +184,10 @@ public class ReturnRouteService {
 
 		candidates = cityRepository.findAllByDirectionAndGapMinutes(direction, gapMinutes);
 		if (candidates.isEmpty()) {
-			throw new BusinessException(ErrorCode.NOT_FOUND);
+			String message = "귀국 루트 경유 도시 후보를 찾을 수 없습니다. direction=%s, gapMinutes=%d"
+				.formatted(direction, gapMinutes);
+			log.warn(message);
+			throw new BusinessException(ErrorCode.RETURN_ROUTE_CITY_NOT_FOUND, message);
 		}
 
 		return candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
@@ -199,24 +205,19 @@ public class ReturnRouteService {
 
 	private City getSeoulCity() {
 		return cityRepository.findFirstByDirectionOrderByDisplayOrderAsc(CityDirection.BASE)
-			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+			.orElseThrow(() -> new BusinessException(ErrorCode.SEOUL_CITY_NOT_FOUND));
 	}
 
 	private ReturnRoute getCurrentRouteEntity(Long memberId) {
 		Member member = getMember(memberId);
 		return returnRouteRepository.findFirstByMemberAndStatusOrderByCreatedAtDesc(member,
 				ReturnRouteStatus.IN_PROGRESS)
-			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+			.orElseThrow(() -> new BusinessException(ErrorCode.RETURN_ROUTE_NOT_FOUND));
 	}
 
 	private ReturnRouteDay getCurrentDay(ReturnRoute route) {
 		return returnRouteDayRepository.findByReturnRouteAndDayNumber(route, route.getCurrentDayNumber())
-			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
-	}
-
-	private ReturnRouteDay getCurrentDayOrNull(ReturnRoute route) {
-		return returnRouteDayRepository.findByReturnRouteAndDayNumber(route, route.getCurrentDayNumber())
-			.orElse(null);
+			.orElseThrow(() -> new BusinessException(ErrorCode.RETURN_ROUTE_DAY_NOT_FOUND));
 	}
 
 	private CitySummaryResponse getDepartureCity(ReturnRoute route) {
@@ -226,7 +227,7 @@ public class ReturnRouteService {
 
 		ReturnRouteDay previousDay = returnRouteDayRepository.findByReturnRouteAndDayNumber(route,
 				route.getCurrentDayNumber() - 1)
-			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+			.orElseThrow(() -> new BusinessException(ErrorCode.RETURN_ROUTE_DAY_NOT_FOUND));
 		return CitySummaryResponse.from(previousDay.getCheckpointCity());
 	}
 
@@ -237,7 +238,7 @@ public class ReturnRouteService {
 
 	private void validateOwner(Member member, SleepJetlagResult result) {
 		if (!result.getMember().getId().equals(member.getId())) {
-			throw new BusinessException(ErrorCode.NOT_FOUND);
+			throw new BusinessException(ErrorCode.SLEEP_RESULT_FORBIDDEN);
 		}
 	}
 
