@@ -19,6 +19,7 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
 
 management:
   endpoints:
@@ -35,6 +36,8 @@ cors:
   extra-allowed-origins: ${CORS_EXTRA_ALLOWED_ORIGINS:https://13.125.171.232.nip.io,http://13.125.171.232.nip.io}
 
 app:
+  swagger:
+    server-url: ${APP_SWAGGER_SERVER_URL:https://13.125.171.232.nip.io}
   jwt:
     secret: ${JWT_SECRET}
     access-token-expiration-millis: ${JWT_ACCESS_TOKEN_EXPIRATION_MILLIS:86400000}

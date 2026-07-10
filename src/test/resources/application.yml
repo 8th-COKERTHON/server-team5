@@ -10,6 +10,8 @@ spring:
       ddl-auto: create-drop
 
 app:
+  swagger:
+    server-url: http://localhost:8080
   jwt:
     secret: 8th-cokerthon-test-jwt-secret-key-for-test-runtime
     access-token-expiration-millis: 86400000
