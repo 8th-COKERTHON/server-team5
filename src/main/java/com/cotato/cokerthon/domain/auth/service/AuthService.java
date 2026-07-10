@@ -33,12 +33,12 @@ public class AuthService {
 
 	@Transactional
 	public MemberResponse signup(SignupRequest request) {
-		if (memberRepository.existsByEmail(request.email())) {
-			throw new BusinessException(ErrorCode.DUPLICATED_EMAIL);
+		if (memberRepository.existsByLoginId(request.id())) {
+			throw new BusinessException(ErrorCode.DUPLICATED_LOGIN_ID);
 		}
 
 		Member member = Member.create(
-			request.email(),
+			request.id(),
 			passwordEncoder.encode(request.password()),
 			request.nickname()
 		);
@@ -47,7 +47,7 @@ public class AuthService {
 	}
 
 	public TokenResponse login(LoginRequest request) {
-		Member member = memberRepository.findByEmail(request.email())
+		Member member = memberRepository.findByLoginId(request.id())
 			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
 		if (!passwordEncoder.matches(request.password(), member.getPassword())) {

@@ -23,13 +23,13 @@ public class AuthController {
 		this.authService = authService;
 	}
 
-	@Operation(summary = "회원가입", description = "이메일, 비밀번호, 닉네임으로 회원가입합니다.")
+	@Operation(summary = "회원가입", description = "아이디, 비밀번호, 닉네임으로 회원가입합니다.")
 	@PostMapping("/signup")
 	public ApiResponse<MemberResponse> signup(@Valid @RequestBody SignupRequest request) {
 		return ApiResponse.ok(authService.signup(request));
 	}
 
-	@Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인하고 Access Token을 발급받습니다.")
+	@Operation(summary = "로그인", description = "아이디와 비밀번호로 로그인하고 Access Token을 발급받습니다.")
 	@PostMapping("/login")
 	public ApiResponse<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
 		return ApiResponse.ok(authService.login(request));

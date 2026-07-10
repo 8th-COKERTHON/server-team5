@@ -9,8 +9,8 @@ import jakarta.persistence.Table;
 @Table(name = "members")
 public class Member extends BaseEntity {
 
-	@Column(nullable = false, unique = true, length = 100)
-	private String email;
+	@Column(nullable = false, unique = true, length = 20)
+	private String loginId;
 
 	@Column(nullable = false)
 	private String password;
@@ -21,18 +21,18 @@ public class Member extends BaseEntity {
 	protected Member() {
 	}
 
-	private Member(String email, String password, String nickname) {
-		this.email = email;
+	private Member(String loginId, String password, String nickname) {
+		this.loginId = loginId;
 		this.password = password;
 		this.nickname = nickname;
 	}
 
-	public static Member create(String email, String encodedPassword, String nickname) {
-		return new Member(email, encodedPassword, nickname);
+	public static Member create(String loginId, String encodedPassword, String nickname) {
+		return new Member(loginId, encodedPassword, nickname);
 	}
 
-	public String getEmail() {
-		return email;
+	public String getLoginId() {
+		return loginId;
 	}
 
 	public String getPassword() {
