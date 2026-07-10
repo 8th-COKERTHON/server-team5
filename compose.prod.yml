@@ -1,6 +1,6 @@
 services:
   app:
-    image: ghcr.io/8th-cokerthon/server-team5:latest
+    image: ${APP_IMAGE}
     container_name: team5-app
     restart: unless-stopped
     env_file:
