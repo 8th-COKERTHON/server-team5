@@ -2,7 +2,9 @@ package com.cotato.cokerthon.global.config;
 
 import com.cotato.cokerthon.global.security.JwtAuthenticationEntryPoint;
 import com.cotato.cokerthon.global.security.JwtAuthenticationFilter;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,15 +34,18 @@ public class SecurityConfig {
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 	private final List<String> allowedOrigins;
+	private final List<String> extraAllowedOrigins;
 
 	public SecurityConfig(
 		JwtAuthenticationFilter jwtAuthenticationFilter,
 		JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-		@Value("${cors.allowed-origins}") List<String> allowedOrigins
+		@Value("${cors.allowed-origins:}") String allowedOrigins,
+		@Value("${cors.extra-allowed-origins:}") String extraAllowedOrigins
 	) {
 		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
 		this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
-		this.allowedOrigins = allowedOrigins;
+		this.allowedOrigins = parseOrigins(allowedOrigins);
+		this.extraAllowedOrigins = parseOrigins(extraAllowedOrigins);
 	}
 
 	@Bean
@@ -67,7 +72,9 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(allowedOrigins);
+		configuration.setAllowedOrigins(Stream.concat(allowedOrigins.stream(), extraAllowedOrigins.stream())
+			.distinct()
+			.toList());
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setExposedHeaders(List.of("Authorization"));
@@ -76,5 +83,12 @@ public class SecurityConfig {
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
 		return source;
+	}
+
+	private List<String> parseOrigins(String origins) {
+		return Arrays.stream(origins.split(","))
+			.map(String::trim)
+			.filter(origin -> !origin.isBlank())
+			.toList();
 	}
 }
