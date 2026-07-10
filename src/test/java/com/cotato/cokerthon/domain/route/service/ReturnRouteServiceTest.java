@@ -3,6 +3,8 @@ package com.cotato.cokerthon.domain.route.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.cotato.cokerthon.domain.city.entity.City;
@@ -11,6 +13,7 @@ import com.cotato.cokerthon.domain.city.repository.CityRepository;
 import com.cotato.cokerthon.domain.member.entity.Member;
 import com.cotato.cokerthon.domain.member.repository.MemberRepository;
 import com.cotato.cokerthon.domain.route.entity.ReturnRoute;
+import com.cotato.cokerthon.domain.route.entity.ReturnRouteDay;
 import com.cotato.cokerthon.domain.route.entity.ReturnRouteStatus;
 import com.cotato.cokerthon.domain.route.repository.ReturnRouteDayRepository;
 import com.cotato.cokerthon.domain.route.repository.ReturnRouteRepository;
@@ -28,6 +31,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -122,6 +126,37 @@ class ReturnRouteServiceTest {
 				assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.RETURN_ROUTE_CITY_NOT_FOUND);
 				assertThat(exception.getMessage()).contains("direction=WEST", "gapMinutes=180");
 			});
+	}
+
+	@Test
+	void createReturnRouteMapsWest15MinutesToSeoulWithoutFindingCityCandidates() {
+		Member member = member(MEMBER_ID);
+		SleepJetlagResult result = sleepJetlagResult(member);
+		City seoul = city(CityDirection.BASE);
+		when(memberRepository.findById(MEMBER_ID)).thenReturn(Optional.of(member));
+		when(sleepJetlagResultRepository.findById(RESULT_ID)).thenReturn(Optional.of(result));
+		when(returnRouteRepository.findAllByMemberAndStatus(member, ReturnRouteStatus.IN_PROGRESS))
+			.thenReturn(List.of());
+		when(returnRouteRepository.save(any(ReturnRoute.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(returnRouteDayRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+		when(sleepTimeCalculator.reached(any(), any(), any(), any())).thenReturn(false, true);
+		when(sleepTimeCalculator.moveTowardTarget(LocalTime.of(3, 0), LocalTime.of(23, 0)))
+			.thenReturn(LocalTime.of(2, 45));
+		when(sleepTimeCalculator.moveTowardTarget(LocalTime.of(11, 0), LocalTime.of(7, 0)))
+			.thenReturn(LocalTime.of(10, 45));
+		when(sleepTimeCalculator.calculateMidTime(LocalTime.of(2, 45), LocalTime.of(10, 45)))
+			.thenReturn(LocalTime.of(6, 45));
+		when(sleepTimeCalculator.signedMidDifferenceMinutes(LocalTime.of(3, 0), LocalTime.of(6, 45)))
+			.thenReturn(15);
+		when(cityRepository.findFirstByDirectionOrderByDisplayOrderAsc(CityDirection.BASE))
+			.thenReturn(Optional.of(seoul));
+
+		returnRouteService.createReturnRoute(MEMBER_ID, RESULT_ID);
+
+		ArgumentCaptor<ReturnRouteDay> dayCaptor = ArgumentCaptor.forClass(ReturnRouteDay.class);
+		verify(returnRouteDayRepository).save(dayCaptor.capture());
+		assertThat(dayCaptor.getValue().getCheckpointCity()).isSameAs(seoul);
+		verify(cityRepository, never()).findAllByDirectionAndGapMinutes(CityDirection.WEST, 15);
 	}
 
 	@Test
