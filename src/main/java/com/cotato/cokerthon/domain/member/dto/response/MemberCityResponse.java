@@ -1,10 +1,10 @@
-package com.cotato.cokerthon.domain.sleep.dto.response;
+package com.cotato.cokerthon.domain.member.dto.response;
 
 import com.cotato.cokerthon.domain.city.entity.City;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "보딩패스에 표시되는 도시 정보 (출발지 서울 또는 매칭된 현재 수면 도시)")
-public record CitySummaryResponse(
+@Schema(description = "내가 현재 머무는 수면 도시 정보 (지구본에 내 위치를 찍을 때 사용)")
+public record MemberCityResponse(
 	@Schema(description = "국가명", example = "인도")
 	String countryName,
 
@@ -24,8 +24,8 @@ public record CitySummaryResponse(
 	double longitude
 ) {
 
-	public static CitySummaryResponse from(City city) {
-		return new CitySummaryResponse(
+	public static MemberCityResponse from(City city) {
+		return new MemberCityResponse(
 			city.getCountryName(),
 			city.getCityNameKr(),
 			city.getCityNameEn(),

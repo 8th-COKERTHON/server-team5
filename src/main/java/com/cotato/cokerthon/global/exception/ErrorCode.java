@@ -9,7 +9,9 @@ public enum ErrorCode {
 	DUPLICATED_LOGIN_ID(HttpStatus.CONFLICT, "MEMBER_409_001", "이미 사용 중인 아이디입니다."),
 	NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON_404", "요청한 리소스를 찾을 수 없습니다."),
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON_500", "서버 오류가 발생했습니다."),
-	CITY_NOT_MATCHED(HttpStatus.INTERNAL_SERVER_ERROR, "SLEEP_500_001", "시차에 매칭되는 도시를 찾을 수 없습니다.");
+	CITY_NOT_MATCHED(HttpStatus.INTERNAL_SERVER_ERROR, "SLEEP_500_001", "시차에 매칭되는 도시를 찾을 수 없습니다."),
+	SELF_COMPANION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "COMPANION_400_001", "자기 자신은 동행자로 추가할 수 없습니다."),
+	ALREADY_COMPANION(HttpStatus.CONFLICT, "COMPANION_409_001", "이미 추가한 동행자입니다.");
 
 	private final HttpStatus status;
 	private final String code;
