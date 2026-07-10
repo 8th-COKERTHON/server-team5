@@ -9,7 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-// 도시 매핑 마스터 데이터 (11개 기본 + 확장 4개 + 동쪽 4개). 시드 데이터라 변경 이력 불필요
+// 도시 매핑 마스터 데이터. 같은 시차 구간에 여러 도시가 매핑될 수 있어(랜덤 매칭) 시드 데이터라도 조합 수가 늘어날 수 있음
 @Entity
 @Table(name = "cities")
 public class City {
@@ -29,10 +29,6 @@ public class City {
 	// 영문 도시명 (예: NEW DELHI)
 	@Column(nullable = false, length = 50)
 	private String cityNameEn;
-
-	// IATA 공항 코드 (예: DEL)
-	@Column(nullable = false, unique = true, length = 3)
-	private String airportCode;
 
 	// UTC 오프셋 (예: +05:30)
 	@Column(nullable = false, length = 10)
@@ -62,15 +58,47 @@ public class City {
 	@Column(name = "is_long_haul", nullable = false)
 	private boolean longHaul;
 
-	// 국기 이미지 URL
-	@Column(length = 500)
-	private String flagImageUrl;
-
 	// 정렬/귀국 경유 순서 기준 (서울과 가까운 순)
 	@Column(nullable = false)
 	private int displayOrder;
 
+	// 위도 (프론트 지구본 매핑용)
+	@Column(nullable = false)
+	private double latitude;
+
+	// 경도 (프론트 지구본 매핑용)
+	@Column(nullable = false)
+	private double longitude;
+
 	protected City() {
+	}
+
+	private City(String countryName, String cityNameKr, String cityNameEn,
+		String utcOffset, String ianaTimezoneId, CityDirection direction, int gapMinutes,
+		int mappingMinMinutes, Integer mappingMaxMinutes, boolean longHaul,
+		int displayOrder, double latitude, double longitude) {
+		this.countryName = countryName;
+		this.cityNameKr = cityNameKr;
+		this.cityNameEn = cityNameEn;
+		this.utcOffset = utcOffset;
+		this.ianaTimezoneId = ianaTimezoneId;
+		this.direction = direction;
+		this.gapMinutes = gapMinutes;
+		this.mappingMinMinutes = mappingMinMinutes;
+		this.mappingMaxMinutes = mappingMaxMinutes;
+		this.longHaul = longHaul;
+		this.displayOrder = displayOrder;
+		this.latitude = latitude;
+		this.longitude = longitude;
+	}
+
+	public static City create(String countryName, String cityNameKr, String cityNameEn,
+		String utcOffset, String ianaTimezoneId, CityDirection direction, int gapMinutes,
+		int mappingMinMinutes, Integer mappingMaxMinutes, boolean longHaul,
+		int displayOrder, double latitude, double longitude) {
+		return new City(countryName, cityNameKr, cityNameEn, utcOffset, ianaTimezoneId,
+			direction, gapMinutes, mappingMinMinutes, mappingMaxMinutes, longHaul,
+			displayOrder, latitude, longitude);
 	}
 
 	public Integer getId() {
@@ -87,10 +115,6 @@ public class City {
 
 	public String getCityNameEn() {
 		return cityNameEn;
-	}
-
-	public String getAirportCode() {
-		return airportCode;
 	}
 
 	public String getUtcOffset() {
@@ -121,11 +145,15 @@ public class City {
 		return longHaul;
 	}
 
-	public String getFlagImageUrl() {
-		return flagImageUrl;
-	}
-
 	public int getDisplayOrder() {
 		return displayOrder;
+	}
+
+	public double getLatitude() {
+		return latitude;
+	}
+
+	public double getLongitude() {
+		return longitude;
 	}
 }
