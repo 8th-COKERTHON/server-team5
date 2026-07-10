@@ -43,7 +43,7 @@ public class AuthService {
 			request.nickname()
 		);
 
-		return MemberResponse.from(memberRepository.save(member));
+		return MemberResponse.from(memberRepository.save(member), null);
 	}
 
 	public TokenResponse login(LoginRequest request) {

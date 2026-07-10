@@ -44,6 +44,8 @@ class SleepJetlagIntegrationTest {
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		JsonNode data = objectMapper.readTree(response.getBody()).path("data");
 		assertThat(data.path("to").path("cityNameKr").asText()).isEqualTo("뉴델리");
+		assertThat(data.path("to").path("airportCode").asText()).isEqualTo("DEL");
+		assertThat(data.path("from").path("airportCode").asText()).isEqualTo("ICN");
 		assertThat(data.path("jetlagMinutes").asInt()).isEqualTo(210);
 		assertThat(data.path("jetlagLabel").asText()).isEqualTo("3시간 30분");
 		assertThat(data.path("direction").asText()).isEqualTo("WEST");

@@ -25,7 +25,9 @@ public class MemberController {
 
 	@Operation(
 		summary = "내 정보 조회",
-		description = "Authorization 헤더에 담긴 Access Token으로 현재 로그인한 회원 본인의 정보를 조회합니다."
+		description = "Authorization 헤더에 담긴 Access Token으로 현재 로그인한 회원 본인의 정보를 조회합니다. "
+			+ "가장 최근 수면시차 계산 결과를 기준으로 현재 머무는 도시와 위도/경도를 함께 내려주므로, "
+			+ "지구본 화면에 내 위치를 찍을 때 사용할 수 있습니다."
 	)
 	@ApiResponses({
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
