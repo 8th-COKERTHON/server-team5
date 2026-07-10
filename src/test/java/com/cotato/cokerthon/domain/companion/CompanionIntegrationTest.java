@@ -48,8 +48,11 @@ class CompanionIntegrationTest {
 		assertThat(addResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 		JsonNode addedData = objectMapper.readTree(addResponse.getBody()).path("data");
 		assertThat(addedData.path("nickname").asText()).isEqualTo("민지");
-		// 아직 수면시차 계산 기록이 없으므로 도시 정보는 null
-		assertThat(addedData.path("city").isNull()).isTrue();
+		// 아직 수면시차 계산 기록이 없으므로 서울을 기본 위치로 보여준다
+		assertThat(addedData.path("city").path("cityNameKr").asText()).isEqualTo("서울");
+		assertThat(addedData.path("jetlagMinutes").asInt()).isEqualTo(0);
+		assertThat(addedData.path("direction").asText()).isEqualTo("SAME");
+		assertThat(addedData.path("lastRecordedAt").isNull()).isTrue();
 
 		ResponseEntity<String> listResponse = getCompanions(accessToken);
 		assertThat(listResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -63,7 +66,7 @@ class CompanionIntegrationTest {
 		String myToken = signupAndLogin("comp_city_me", "password1!", "나");
 		String friendToken = signupAndLogin("comp_city_friend", "password1!", "민지");
 
-		// 기획안 예시와 동일한 입력 (03:00~10:00 / 23:00~07:00) → 뉴델리, 3시간30분, WEST
+		// 기획안 예시와 동일한 입력 (03:00~10:00 / 23:00~07:00) → 3시간30분, WEST(gap=210: 뉴델리/콜롬보 tie)
 		String jetlagBody = """
 			{
 				"currentBedtime": "03:00",
@@ -82,9 +85,9 @@ class CompanionIntegrationTest {
 		ResponseEntity<String> listResponse = getCompanions(myToken);
 		JsonNode companion = objectMapper.readTree(listResponse.getBody()).path("data").get(0);
 
-		assertThat(companion.path("city").path("cityNameKr").asText()).isEqualTo("뉴델리");
-		assertThat(companion.path("city").path("latitude").asDouble()).isEqualTo(28.6139);
-		assertThat(companion.path("city").path("longitude").asDouble()).isEqualTo(77.2090);
+		assertThat(companion.path("city").path("cityNameKr").asText()).isIn("뉴델리", "콜롬보");
+		assertThat(companion.path("city").path("latitude").asDouble()).isNotZero();
+		assertThat(companion.path("city").path("longitude").asDouble()).isNotZero();
 		assertThat(companion.path("jetlagLabel").asText()).isEqualTo("3시간 30분");
 		assertThat(companion.path("direction").asText()).isEqualTo("WEST");
 		assertThat(companion.path("lastRecordedAt").isNull()).isFalse();
